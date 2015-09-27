@@ -11,17 +11,7 @@
 #include "spinlock.h"
 #include "fs.h"
 #include "buf.h"
-
-#define SECTOR_SIZE   512
-#define IDE_BSY       0x80
-#define IDE_DRDY      0x40
-#define IDE_DF        0x20
-#define IDE_ERR       0x01
-
-#define IDE_CMD_READ  0x20
-#define IDE_CMD_WRITE 0x30
-#define IDE_CMD_RDMUL 0xc4
-#define IDE_CMD_WRMUL 0xc5
+#include "ide.h"
 
 // idequeue points to the buf now being read/written to the disk.
 // idequeue->qnext points to the next buf to be processed.
@@ -39,7 +29,7 @@ idewait(int checkerr)
 {
   int r;
 
-  while(((r = inb(0x1f7)) & (IDE_BSY|IDE_DRDY)) != IDE_DRDY)
+  while(((r = inb(IDE_DATA_PRIMARY+IDE_REG_STATUS)) & (IDE_BSY|IDE_DRDY)) != IDE_DRDY)
     ;
   if(checkerr && (r & (IDE_DF|IDE_ERR)) != 0)
     return -1;
@@ -57,16 +47,16 @@ ideinit(void)
   idewait(0);
 
   // Check if disk 1 is present
-  outb(0x1f6, 0xe0 | (1<<4));
+  outb(IDE_DATA_PRIMARY+IDE_REG_DISK, 0xe0 | (1<<4));
   for(i=0; i<1000; i++){
-    if(inb(0x1f7) != 0){
+    if(inb(IDE_DATA_PRIMARY+IDE_REG_STATUS) != 0){
       havedisk1 = 1;
       break;
     }
   }
 
   // Switch back to disk 0.
-  outb(0x1f6, 0xe0 | (0<<4));
+  outb(IDE_DATA_PRIMARY+IDE_REG_DISK, 0xe0 | (0<<4));
 }
 
 // Start the request for b.  Caller must hold idelock.
@@ -85,17 +75,17 @@ idestart(struct buf *b)
   if (sector_per_block > 7) panic("idestart");
 
   idewait(0);
-  outb(0x3f6, 0);  // generate interrupt
-  outb(0x1f2, sector_per_block);  // number of sectors
-  outb(0x1f3, sector & 0xff);
-  outb(0x1f4, (sector >> 8) & 0xff);
-  outb(0x1f5, (sector >> 16) & 0xff);
-  outb(0x1f6, 0xe0 | ((b->dev&1)<<4) | ((sector>>24)&0x0f));
+  outb(IDE_CTRL_PRIMARY+IDE_REG_CTRL, 0);  // generate interrupt
+  outb(IDE_DATA_PRIMARY+IDE_REG_SECTORS, sector_per_block);  // number of sectors
+  outb(IDE_DATA_PRIMARY+IDE_REG_LBA0, sector & 0xff);
+  outb(IDE_DATA_PRIMARY+IDE_REG_LBA1, (sector >> 8) & 0xff);
+  outb(IDE_DATA_PRIMARY+IDE_REG_LBA2, (sector >> 16) & 0xff);
+  outb(IDE_DATA_PRIMARY+IDE_REG_DISK, 0xe0 | ((b->dev&1)<<4) | ((sector>>24)&0x0f));
   if(b->flags & B_DIRTY){
-    outb(0x1f7, write_cmd);
-    outsl(0x1f0, b->data, BSIZE/4);
+    outb(IDE_DATA_PRIMARY+IDE_REG_COMMAND, write_cmd);
+    outsl(IDE_DATA_PRIMARY+IDE_REG_DATA, b->data, BSIZE/4);
   } else {
-    outb(0x1f7, read_cmd);
+    outb(IDE_DATA_PRIMARY+IDE_REG_COMMAND, read_cmd);
   }
 }
 
@@ -116,7 +106,7 @@ ideintr(void)
 
   // Read data if needed.
   if(!(b->flags & B_DIRTY) && idewait(1) >= 0)
-    insl(0x1f0, b->data, BSIZE/4);
+    insl(IDE_DATA_PRIMARY+IDE_REG_DATA, b->data, BSIZE/4);
 
   // Wake process waiting for this buf.
   b->flags |= B_VALID;
