@@ -8,7 +8,7 @@
 #include "elf.h"
 
 extern char data[];  // defined by kernel.ld
-pde_t *kpgdir;  // for use in scheduler()
+static pde_t *kpgdir;  // for use in scheduler()
 
 // Set up CPU's kernel segment descriptors.
 // Run once on entry on each CPU.
@@ -187,9 +187,11 @@ inituvm(pde_t *pgdir, char *init, uint sz)
 
   if(sz >= PGSIZE)
     panic("inituvm: more than a page");
-  mem = kalloc();
+  if ((mem = kalloc()) == 0)
+    panic("inituvm: cannot allocate memory");
   memset(mem, 0, PGSIZE);
-  mappages(pgdir, 0, PGSIZE, V2P(mem), PTE_W|PTE_U);
+  if (mappages(pgdir, 0, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0)
+    panic("inituvm: cannot create pagetable");
   memmove(mem, init, sz);
 }
 
