@@ -1,7 +1,6 @@
 #include "asm.h"
-#include "memlayout.h"
 #include "mmu.h"
-	
+
 # Each non-boot CPU ("AP") is started up in response to a STARTUP
 # IPI from the boot CPU.  Section B.4.2 of the Multi-Processor
 # Specification says that the AP will start in real mode with CS:IP
@@ -19,10 +18,10 @@
 #
 # This code combines elements of bootasm.S and entry.S.
 
-.code16           
+.code16
 .globl start
 start:
-  cli            
+  cli
 
   # Zero data segment registers DS, ES, and SS.
   xorw    %ax,%ax
@@ -64,13 +63,13 @@ start32:
   movl    %eax, %cr3
   # Turn on paging.
   movl    %cr0, %eax
-  orl     $(CR0_PE|CR0_PG|CR0_WP), %eax
+  orl     $(CR0_PG|CR0_WP), %eax
   movl    %eax, %cr0
 
   # Switch to the stack allocated by startothers()
   movl    (start-4), %esp
   # Call mpenter()
-  call	 *(start-8)
+  call	  *(start-8)
 
   movw    $0x8a00, %ax
   movw    %ax, %dx
@@ -85,7 +84,6 @@ gdt:
   SEG_NULLASM
   SEG_ASM(STA_X|STA_R, 0, 0xffffffff)
   SEG_ASM(STA_W, 0, 0xffffffff)
-
 
 gdtdesc:
   .word   (gdtdesc - gdt - 1)
