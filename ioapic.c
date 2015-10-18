@@ -22,7 +22,7 @@
 #define INT_ACTIVELOW  0x00002000  // Active low (vs high)
 #define INT_LOGICAL    0x00000800  // Destination is CPU id (vs APIC ID)
 
-volatile struct ioapic *ioapic;
+volatile struct ioapic *ioapic;  // Initialized in mp.c
 
 // IO APIC MMIO structure: write reg, then read or write data.
 struct ioapic {
@@ -53,7 +53,10 @@ ioapicinit(void)
   if(!ismp)
     return;
 
-  ioapic = (volatile struct ioapic*)IOAPIC;
+  if(ioapic == 0) {
+    ioapic = (volatile struct ioapic*)IOAPIC;
+    cprintf("ioapicinit: falling back to default ioapic address\n");
+  }
   maxintr = (ioapicread(REG_VER) >> 16) & 0xFF;
   id = ioapicread(REG_ID) >> 24;
   if(id != ioapicid)
