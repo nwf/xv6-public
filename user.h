@@ -23,6 +23,12 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+int yield(int);
+int desch(int *);
+int mkrun(int);
+int tspawn(void *stktop, void (*f)(void *), void *a);
+int gettid(void);
+int texit(void) __attribute__((noreturn));
 
 // ulib.c
 int stat(char*, struct stat*);

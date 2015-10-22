@@ -20,3 +20,10 @@
 #define SYS_link   19
 #define SYS_mkdir  20
 #define SYS_close  21
+
+#define SYS_yield  30
+#define SYS_desch  31
+#define SYS_mkrun  32
+#define SYS_tspawn 33
+#define SYS_gettid 34
+#define SYS_texit  35
