@@ -28,6 +28,8 @@ OBJS = \
 	uart.o\
 	vectors.o\
 	vm.o\
+    \
+    vers.o\
 
 # Cross-compiling (e.g., on Mac OS X)
 # TOOLPREFIX = i386-jos-elf
@@ -136,6 +138,11 @@ tags: $(OBJS) entryother.S _init
 .SECONDARY: vectors.S
 vectors.S: vectors.pl
 	perl vectors.pl > vectors.S
+
+vers.h: .git/HEAD
+	echo "#define XV6_BUILD_STRING \"$$(git describe --dirty --always)\"" > $@
+
+vers.c : vers.h
 
 ULIB = ulib.o usys.o printf.o umalloc.o
 
