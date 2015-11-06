@@ -21,6 +21,8 @@ spawnee(void *_a) {
   BAILOUT;
 }
 
+char stacks[N][STKSIZE];
+
 int main() {
   int i;
   void *s;
@@ -30,11 +32,7 @@ int main() {
   TEST_EXIT_IF(LOCK_INIT(&u) != 0, "Could not initialize spinlock");
   LOCK_ACT(acquire, &u);
   for(i = 0; i < N; i++) {
-    /*
-     * This test is designed to leak memory, but your uthr library
-     * shouldn't!  It's OK here because this is just a little test
-     */
-    TEST_EXIT_IF((s = malloc(STKSIZE)) == 0, "oom");
+    s = &stacks[i][0];
     s += STKSIZE;
 
     TEST_EXIT_IF((tid = tspawn(s, spawnee, &u)) < 0, "spawn");
