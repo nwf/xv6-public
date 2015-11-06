@@ -16,4 +16,7 @@ int main() {
   TEST_EXIT_IF(uthr_init(1024) < 0, "thr_init");
   TEST_EXIT_IF(uthr_create(f, 0) < 0, "thr_create");
   uthr_exit(0);
+
+  // NOTREACHED
+  return 0;
 }

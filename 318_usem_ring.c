@@ -57,4 +57,7 @@ int main() {
   TEST_EXIT_IF(CREATOR(tstk[1]+sizeof(tstk[0]), test, &ring[1]) < 0, "tspawn 2");
   TEST_EXIT_IF(CREATOR(tstk[2]+sizeof(tstk[0]), test, &ring[2]) < 0, "tspawn 3");
   test(&ring[3]);
+
+  // NOTREACHED
+  return 0;
 }

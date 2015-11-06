@@ -24,4 +24,7 @@ int main() {
 
   uthr_create(f, (void*)gettid());
   uthr_exit(&x);
+
+  // NOTREACHED
+  return 0;
 }
