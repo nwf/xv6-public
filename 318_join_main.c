@@ -16,6 +16,7 @@ void f(void *a) {
   TEST_EXIT_IF(uthr_join(mtid, &hand) < 0, "join");
   TEST_EXIT_IF(hand != &x, "hand mismatch");
   TEST_FINI();
+  uthr_exit(0);
 }
 
 int main() {
