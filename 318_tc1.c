@@ -23,8 +23,8 @@ int main() {
   // Note that we ignore the tid for this simple test...
   uthr_create(f, &x);
 
-  // hang around and let the other thread get a chance to run
-  sleep(5);
-  // then violently kill everything in sight
-  exit();
+  while(1) { yield(-1); }
+
+  // NOTREACHED
+  return 0;
 }
